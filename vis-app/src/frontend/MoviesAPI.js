@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-// const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
 const MoviesAPI = () => {
-  const [page, setPage] = useState(95);
-  // const [totalPages, setTotalPages] = useState(0);
+  const [page, setPage] = useState(1);
   const genres = {
     28: "Action",
     12: "Adventure",
@@ -52,24 +50,20 @@ const MoviesAPI = () => {
   useEffect(() => {
     // APICall();
     OTTAPI();
-    // test()
   }, [page]);
 
   const OTTAPI = () => {
     axios
       .get(
-        `https://api.themoviedb.org/3/discover/tv?api_key=8e08b11214706a25758ac317836ef42e&language=en-US&sort_by=popularity.desc&first_air_date_year=2021&page=${page}&timezone=America%2FNew_York&include_null_first_air_dates=false&with_original_language=en&with_watch_monetization_types=flatrate`
+        `https://api.themoviedb.org/3/discover/tv?api_key=8e08b11214706a25758ac317836ef42e&language=en-US&sort_by=popularity.desc&air_date.gte=2021&first_air_date.gte=2021&first_air_date_year=2021&page=${page}&timezone=America%2FNew_York&include_null_first_air_dates=false&with_watch_monetization_types=flatrate`
       )
       .then((res) => {
-        console.log(res["data"]);
-        // setTotalPages(res["data"]["total_pages"]);
+        console.log("Original", res["data"]);
         total_pages = res["data"]["total_pages"];
         let results = res["data"]["results"];
         let dum_arr = [];
         results.map((val, index) => {
-          // console.log(val["genre_ids"].length);
-          // console.log(val);
-          if (val["genre_ids"].length !== 0) {
+          if ((val["genre_ids"].length !== 0) && (val["original_language"] === "en")) {
             let dum_dic = {};
             let gen_ids = "";
             dum_dic["movie_name"] = val["name"];
@@ -85,25 +79,24 @@ const MoviesAPI = () => {
           }
         });
         data = dum_arr;
-        console.log(data);
-        // APItoBackend();
+        console.log("Structured: ", data);
         OTTtoBackend();
       });
   };
 
+
   const APICall = () => {
     axios
       .get(
-        `https://api.themoviedb.org/3/discover/movie?api_key=8e08b11214706a25758ac317836ef42e&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&year=2021&with_watch_monetization_types=flatrate`
+        `https://api.themoviedb.org/3/discover/movie?api_key=8e08b11214706a25758ac317836ef42e&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&primary_release_year=2021&primary_release_date.gte=2021&release_date.gte=2021&year=2021&with_watch_monetization_types=flatrate`
       )
       .then((res) => {
         let dum_data = res.data["results"];
-        // setTotalPages(res["data"]["total_pages"]);
         total_pages = res["data"]["total_pages"];
         console.log(dum_data);
         let dum_arr = [];
         dum_data.map((val, index) => {
-          if (val["genre_ids"].length !== 0) {
+          if ((val["genre_ids"].length !== 0) && (val["original_language"] === "en")) {
             let dum_dic = {};
             let gen_ids = "";
             dum_dic["movie_name"] = val["title"];
@@ -125,26 +118,31 @@ const MoviesAPI = () => {
   };
 
   const OTTtoBackend = () => {
+    let last_page = false
+    if (page === total_pages){
+      last_page = true
+      console.log("Last_page")
+    }
     const body = {
       data: data,
+      last_page: last_page
     };
     if (data !== []) {
       axios.post("/OTTmovies", body).then((res) => {
         console.log("res", res);
       });
-      // console.log("total Pages: ", total_pages)
-      // if (page <= 4) {
-      //   setPage(page + 1);
-      // }
+      if (page <= total_pages) {
+        setPage(page + 1);
+      }
     }
   };
 
   const APItoBackend = () => {
-    const body = {
-      data: data,
-    };
     // console.log("Sending data to backend");
     if (data !== []) {
+      const body = {
+        data: data,
+      };
       // axios.post("/api/insert/featuredFilm", body)
       axios.post("/movieTable", body).then((res) => {
         console.log("res", res);
