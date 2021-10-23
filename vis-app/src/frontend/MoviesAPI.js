@@ -48,8 +48,8 @@ const MoviesAPI = () => {
   let total_pages = 0;
 
   useEffect(() => {
-    // APICall();
-    OTTAPI();
+    APICall();
+    // OTTAPI();
   }, [page]);
 
   const OTTAPI = () => {

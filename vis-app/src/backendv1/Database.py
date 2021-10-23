@@ -31,28 +31,38 @@ def isMovieTableCreated(table_name):
         if x[0] == table_name:
             istableCreated = True
     return istableCreated
+
+def insertCSV(header):
+    with open("featured1.csv", 'w', encoding="UTF8") as f:
+      writer = csv.writer(f)
+      if header:
+        writer.writerow(("movie_id", "api_id", "movie_name", "genre", "year", "movie_type", \
+        "sentiment", "release_date"))
+    #   for x in myresult:
+    #       writer.writerow(x)
         
 
 def createMovieTable(table_name):
-    sqlQuery = "CREATE TABLE " + table_name + " (movie_id VARCHAR(25), movie_name VARCHAR(255), genre VARCHAR(255), year VARCHAR(25), movie_type VARCHAR(25), sentiment VARCHAR(25), release_date VARCHAR(25), PRIMARY KEY (movie_id))"
+    sqlQuery = "CREATE TABLE " + table_name + " (movie_id INT AUTO_INCREMENT, api_id VARCHAR(25), movie_name VARCHAR(255), genre VARCHAR(255), year VARCHAR(25), movie_type VARCHAR(25), sentiment VARCHAR(25), release_date VARCHAR(25), PRIMARY KEY (movie_id))"
     mycursor.execute(sqlQuery)
 
 @app.route('/movieTable', methods=['POST'])
 def insertMovies():
     table_name = "OTT"
     res = request.get_json()
-    if not isMovieTableCreated(table_name):
-        createMovieTable(table_name)
-    for item in res["data"]:
-        sqlquery = "Insert into Master_Final." + table_name + " ("
-        sqlKey = ''
-        sqlList = []
-        for key, value in item.items():
-            sqlKey += key + ", "
-            sqlList.append(str(value))
-        sqlquery += sqlKey[0:-2] + ") VALUES (%s, %s, %s, %s, %s, %s)"
-        mycursor.execute(sqlquery, tuple(sqlList))
-        mydb.commit()
+    print(res)
+    # if not isMovieTableCreated(table_name):
+    #     createMovieTable(table_name)
+    # for item in res["data"]:
+    #     sqlquery = "Insert into Master_Final." + table_name + " ("
+    #     sqlKey = ''
+    #     sqlList = []
+    #     for key, value in item.items():
+    #         sqlKey += key + ", "
+    #         sqlList.append(str(value))
+    #     sqlquery += sqlKey[0:-2] + ") VALUES (%s, %s, %s, %s, %s, %s)"
+    #     mycursor.execute(sqlquery, tuple(sqlList))
+    #     mydb.commit()
     return "Flask running"
 
 
@@ -79,8 +89,9 @@ def OTTMovies():
             writer.writerows(data)
     return "OTT"
 
+
 def insertsql():
-    with open("allfilms.csv", "r") as rf:
+    with open("../backend/allfilms.csv", "r") as rf:
         csvreader = csv.reader(rf)
         header = next(csvreader)
         for row in csvreader:
@@ -88,20 +99,21 @@ def insertsql():
                 sentiment, release_date) values (%s, %s, %s, %s, %s, %s, %s)"
             mycursor.execute(insert_query, tuple(row))
             mydb.commit()
+            # select_query = "select count(movie_id) from Master_Final.featured where movie_id = " + id
+            # mycursor.execute(select_query)
+            # count = mycursor.fetchall()
+            # if count[0][0] == 1:
+            #     print(count)
+            #     update_query = 'update Master_Final.featured set movie_type = "Both" where movie_id = ' + id
+            #     mycursor.execute(update_query)
+            #     mydb.commit()
+            # else:
+            #     insert_query = "Insert into Master_Final.featured (movie_id, movie_name, genre, year, movie_type,\
+            #     sentiment, release_date) values (%s, %s, %s, %s, %s, %s, %s)"
+            #     mycursor.execute(insert_query, tuple(row))
+            #     mydb.commit()
 
-def createcsvfile():
-    select_query = "SELECT * FROM Master_Final.allMoviesv1;"
-    mycursor.execute(select_query)
-    myresult = mycursor.fetchall()
-    # print(myresult)
-    with open("allMoviesv1.csv", "w", encoding="UTF8") as wf:
-        writer = csv.writer(wf)
-        writer.writerow(("movie_id", "api_id", "movie_name", "genre", "year", "movie_type", "sentiment", "release_date"))
-        for i in myresult:
-            writer.writerow(i)
-
-createcsvfile()
-
+insertsql()
 
     # try this logic first, if its throwing an error, then use the above logic
     # table_name = "featured"

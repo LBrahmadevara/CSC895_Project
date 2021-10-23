@@ -1,6 +1,8 @@
 # from reqTweets import connect_to_endpoint
 import mysql.connector
 import csv
+import os
+import json
 
 mydb = mysql.connector.connect(
   host="localhost",
@@ -47,6 +49,38 @@ def featuredFilm():
       writer.writerow(("movie_id", "movie_name", "genre", "year", "movie_type", "sentiment", "release_date"))
       for x in myresult:
           writer.writerow(x)
+
+
+def writefile():
+    if os.path.exists("Tweets.csv"):
+        with open("Tweets.csv", "w") as wf:
+            writer = csv.writer(wf)
+            writer.writerow(("tweet_api_id", "tweet", "created_at", "place_id", "country", \
+            "city", "movie_name", "movie_id"))
+    else:
+        with open("Tweets.csv", "a") as af:
+            writer = csv.writer(af)
+            writer.writerow(("as", "as", "asd", "asd", "as", "as", "asd", "asd"))
+            writer.writerow(("as", "as", "asd", "asd", "as", "as", "asd", "asd"))
+            writer.writerow(("as", "as", "asd", "asd", "as", "as", "asd", "asd"))
+            writer.writerow(("as", "as", "asd", "asd", "as", "as", "asd", "asd"))
+
+
+def readfi():
+  with open("res.json", "r") as rf:
+    data = json.loads(rf.read())
+    print(data)
+# readfi()
+writefile()
+
+
+# mycursor.execute("SELECT * FROM Master_Final.allFilms;")
+# myresult = mycursor.fetchall()
+# with open("allFilms.csv", 'w', encoding="UTF8") as f:
+#   writer = csv.writer(f)
+#   writer.writerow(("movie_id", "movie_name", "genre", "year", "movie_type", "sentiment", "release_date"))
+#   for x in myresult:
+#     writer.writerow(x)
 
 
 

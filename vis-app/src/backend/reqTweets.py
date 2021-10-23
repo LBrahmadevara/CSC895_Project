@@ -3,7 +3,7 @@ import json
 import time
 
 start_time = '2021-01-01T00:00:00Z'
-end_time = '2021-07-01T00:00:00Z'
+end_time = '2021-10-01T00:00:00Z'
 max_results = 500
 months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 bearer_token = "AAAAAAAAAAAAAAAAAAAAAH0JTgEAAAAA5V9Rho9fw%2FhTnIIxJEBrFUSPDUs%3D6vRoSA2pU4tpFhPjnJjavfmUarKYNHohGN1PV4PYkXapOMlVkr"
@@ -17,9 +17,14 @@ with open("resp.json", "r+") as file:
 with open("resp.txt", "r+") as tf:
     tf.truncate(0)
 
+# with open("tweets.json", "r+") as rf:
+#     data = json.loads(rf.read())
+#     for i in data.values():
+#         print(i)
+
 def connect_to_endpoint(bearer_token, next_token=None):
     headers = {"Authorization": "Bearer {}".format(bearer_token)}
-    query = "lang:en has:geo (intheheights OR intheheightsmovie) place_country:US -is:retweet -is:quote -is:nullcast"
+    query = "lang:en has:geo (" + ") place_country:US -is:retweet -is:quote -is:nullcast"
     params = {
         'tweet.fields': 'created_at,geo',
         'place.fields': 'country',
@@ -37,6 +42,10 @@ def connect_to_endpoint(bearer_token, next_token=None):
     if response.status_code != 200:
         print(response.text)
         print("waiting for 15 mins")
+        # time.sleep(900)
+        # response = requests.request("GET", url, params=params, headers=headers)
+        # if response.status_code != 200:
+        #     raise Exception(response.status_code, response.text)
     return data_restructure(response.json())
 
 def data_restructure(response):
