@@ -32,6 +32,7 @@ is_movie_empty = False
 #         movie_name = "Cruella"
 #         connect_to_endpoint(bearer_token, None)
 
+
 def writefile():
     with open("TweetsList.json", "a") as wf:
         # writer = csv.writer(wf)
@@ -40,13 +41,15 @@ def writefile():
             data = json.loads(rf.read())
             for items in data["data"]:
                 dum_data
-                writer.writerow((items["id"], items["text"], items["created_at"], \
-                items["place_id"], items["country"], items["city"],items["movie_name"] , \
-                items["movie_id"]))
+                writer.writerow((items["id"], items["text"], items["created_at"],
+                                 items["place_id"], items["country"], items["city"], items["movie_name"],
+                                 items["movie_id"]))
+
 
 def delfile(file_name):
     os.remove("res.json")
     os.remove("res.txt")
+
 
 def sqlentry(movie_name):
     mydb = mysql.connector.connect(
@@ -57,11 +60,13 @@ def sqlentry(movie_name):
     )
     mycursor = mydb.cursor()
     # creating a table in db
-    sql_query = "CREATE TABLE Master_Final." + movie_name + " (id VARCHAR(50), movie_name VARCHAR(75), text VARCHAR(500), created_at VARCHAR(75), place_id VARCHAR(75), country VARCHAR(75), city VARCHAR(100), PRIMARY KEY(id));"
+    sql_query = "CREATE TABLE Master_Final." + movie_name + \
+        " (id VARCHAR(50), movie_name VARCHAR(75), text VARCHAR(500), created_at VARCHAR(75), place_id VARCHAR(75), country VARCHAR(75), city VARCHAR(100), PRIMARY KEY(id));"
     mycursor.execute(sql_query)
     with open(movie_name + ".json", "r") as rf:
         json_data = json.loads(rf.read())
-        insert_query = "INSERT INTO Master_Final." + movie_name + " (movie_name, text, id, created_at, place_id, country, city) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+        insert_query = "INSERT INTO Master_Final." + movie_name + \
+            " (movie_name, text, id, created_at, place_id, country, city) VALUES (%s, %s, %s, %s, %s, %s, %s);"
         insert_vals = []
         if sql_entries == 1:
             for items in json_data["data"]:
@@ -80,11 +85,15 @@ def sqlentry(movie_name):
         mydb.commit()
     # delfile(movie_name)
 
+
 def connect_to_endpoint(bearer_token, next_token=None):
-    global is_movie_empty
+    global is_movie_empty, movie_names_list
+    result = None
     headers = {"Authorization": "Bearer {}".format(bearer_token)}
-    query = "lang:en has:geo (" + movie_names_list + ") place_country:US -is:retweet -is:quote -is:nullcast"
-    print(query)
+    movie_names_list = movie_names_list.replace(":", "")
+    query = "lang:en has:geo (" + movie_names_list + \
+        ") place_country:US -is:retweet -is:quote -is:nullcast"
+    # print(query)
     params = {
         'tweet.fields': 'created_at,geo',
         'place.fields': 'country',
@@ -97,23 +106,30 @@ def connect_to_endpoint(bearer_token, next_token=None):
     url = 'https://api.twitter.com/2/tweets/search/all'
     if (next_token is not None):
         params['next_token'] = next_token
-    response = requests.request("GET", url, params=params, headers=headers)
-
-    if response.status_code != 200:
-        print(response.text)
-        print("waiting for 15 mins")
-        time.sleep(900)
+    try:
         response = requests.request("GET", url, params=params, headers=headers)
         if response.status_code != 200:
-            raise Exception(response.status_code, response.text)
-    
-    if response.json()["meta"]["result_count"] == 0:
-        is_movie_empty = True
-        return "empty"
-    else:
-        is_movie_empty = False
+            print(response.text, response.status_code)
+            print("waiting for 15 mins")
+            print("\n")
+            time.sleep(960)
+            response = requests.request("GET", url, params=params, headers=headers)
+            if response.status_code != 200:
+                print("\n")
+                raise Exception(response.status_code, response.text)
 
-    return data_restructure(response.json())
+        if response.json()["meta"]["result_count"] == 0:
+            is_movie_empty = True
+            result = None
+        else:
+            is_movie_empty = False
+            result = data_restructure(response.json())
+    except Exception as err:
+        print("connect_to endpoint: {}".format(repr(err)))
+
+    return result
+    # return data_restructure(response.json())
+
 
 def data_restructure(response):
     data_arr = []
@@ -121,26 +137,30 @@ def data_restructure(response):
     res_data = response["data"]
     geo_location = response["includes"]["places"]
     for item in res_data:
-        temp_data = {}
-        temp_data["movie_id"] = movie_id
-        temp_data["movie_name"] = movie_name
-        temp_data["text"] = item["text"]
-        temp_data["id"] = item["id"]
-        temp_data["created_at"] = item["created_at"]
-        temp_data["place_id"] = item["geo"]["place_id"]
-        sentiment_text = TextBlob(item["text"]).sentiment
-        temp_data["polarity"] = sentiment_text.polarity
-        temp_data["subjectivity"] = sentiment_text.subjectivity
-        for geo_id in geo_location:
-            if item["geo"]["place_id"] in geo_id.values():
-                temp_data["country"] = geo_id["country"]
-                temp_data["city"] = geo_id["full_name"]
-        data_arr.append(temp_data)
+        try:
+            temp_data = {}
+            temp_data["movie_id"] = movie_id
+            temp_data["movie_name"] = movie_name
+            temp_data["text"] = item["text"]
+            temp_data["id"] = item["id"]
+            temp_data["created_at"] = item["created_at"]
+            temp_data["place_id"] = item["geo"]["place_id"]
+            sentiment_text = TextBlob(item["text"]).sentiment
+            temp_data["polarity"] = sentiment_text.polarity
+            temp_data["subjectivity"] = sentiment_text.subjectivity
+            for geo_id in geo_location:
+                if item["geo"]["place_id"] in geo_id.values():
+                    temp_data["country"] = geo_id["country"]
+                    temp_data["city"] = geo_id["full_name"]
+            data_arr.append(temp_data)
+        except Exception as err:
+            print(repr(err))
+            print("\n")
     total_results += int(response["meta"]["result_count"])
     if "next_token" in response["meta"]:
         next_token = response["meta"]["next_token"]
         need_comma = True
-    else:    
+    else:
         next_token = None
         need_comma = False
         if total_results == 1:
@@ -148,15 +168,16 @@ def data_restructure(response):
         # print(total_results)
     return data_arr
 
+
 with open("tweetsv1.json", "r+") as rf:
     data = json.loads(rf.read())
     comma_for_next_file = 0
     for items in data["data"]:
         movie_id = items["movie_id"]
-        # key = items["movie_name"]
-        # val = items["list_of_mv_names"]
-        key = "Blood Curse: The Haunting of Alicia Stone"
-        val = "BloodCurse:TheHauntingofAliciaStone OR BloodCurse:TheHauntingofAliciaStonemovie OR BloodCurse:HauntingofAliciaStone OR BloodCurse:HauntingofAliciaStonemovie OR BloodCurse OR BloodCursemovie OR TheHauntingofAliciaStone OR TheHauntingofAliciaStonemovie OR HauntingofAliciaStone OR HauntingofAliciaStonemovie"
+        key = items["movie_name"]
+        val = items["list_of_mv_names"]
+        # key = "Blood Curse: The Haunting of Alicia Stone"
+        # val = "BloodCurse:TheHauntingofAliciaStone OR BloodCurse:TheHauntingofAliciaStonemovie OR BloodCurse:HauntingofAliciaStone OR BloodCurse:HauntingofAliciaStonemovie OR BloodCurse OR BloodCursemovie OR TheHauntingofAliciaStone OR TheHauntingofAliciaStonemovie OR HauntingofAliciaStone OR HauntingofAliciaStonemovie"
         next_token = "token"
         # if key == "Daddy's Girl":
         #     break
@@ -169,19 +190,12 @@ with open("tweetsv1.json", "r+") as rf:
             # print("next_token: ", next_token)
             time.sleep(1)
             res = connect_to_endpoint(bearer_token, next_token)
-            if res == "empty":
+            if res is None:
                 break
             # print(res)
             with open("senti.txt", 'a') as af:
                 for i in res:
-                    af.write(i["text"] +",")
-            # with open("senti.csv", "w") as wf:
-            #     writer = csv.writer(wf)
-            #     with open("senti.txt", "r+") as rf:
-            #         senti_data = rf.read()
-            #         senti = TextBlob(senti_data).sentiment
-            #         writer.writerow((movie_id, senti.polarity, senti.subjectivity))
-            #         wf.truncate(0)
+                    af.write(i["text"] + ",")
             with open("res.txt", 'a') as tf:
                 # json.dumps => converts json to string
                 # json.loads => converts string to json
@@ -202,22 +216,19 @@ with open("tweetsv1.json", "r+") as rf:
                 with open("senti.txt", "r+") as rf:
                     senti_data = rf.read()
                     senti = TextBlob(senti_data).sentiment
-                    writer.writerow((movie_id, senti.polarity, senti.subjectivity))
-                    # rf.truncate(0)
-        break
-
-with open("res.txt", "r") as rf:
-    txt_data = '{"data":['
-    txt_data += rf.read()
-    txt_data += "]}"
-    with open("res.json", "w") as wf:
-        data = json.loads(txt_data)
-        data["result_count"] = total_results
-        wf.write(json.dumps(data))
-
-
-
-
+                    writer.writerow(
+                        (movie_id, senti.polarity, senti.subjectivity))
+                    rf.truncate(0)
+        # break
+if not is_movie_empty:
+    with open("res.txt", "r") as rf:
+        txt_data = '{"data":['
+        txt_data += rf.read()
+        txt_data += "]}"
+        with open("res.json", "w") as wf:
+            data = json.loads(txt_data)
+            data["result_count"] = total_results
+            wf.write(json.dumps(data))
 
         # if (next_token is None) and (res != "empty"):
         #     txt_data = '{"data":['
@@ -231,13 +242,6 @@ with open("res.txt", "r") as rf:
         #         jf.write(json.dumps(data))
         # # writefile()
         # break
-        
-
-
-
-
-
-
 
         # if key == "Synapse":
         #     break
@@ -274,15 +278,6 @@ with open("res.txt", "r") as rf:
         #         data["result_count"] = total_results
         #         jf.write(json.dumps(data))
         #     sqlentry(movie_name)
-
-
-
-
-
-
-
-
-
 
     # movie_names_list = data["Cruella"]
     # movie_name = "Cruella"
@@ -331,9 +326,8 @@ with open("res.txt", "r") as rf:
 #     with open("resp1.txt", "r") as tf:
 #         txt_data += tf.read()
 #     txt_data += "]}"
-    
+
 #     with open("resp1.json", "a") as jf:
 #         data = json.loads(txt_data)
 #         data["result_count"] = total_results
 #         jf.write(json.dumps(data))
-
