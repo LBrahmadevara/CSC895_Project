@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 from textblob import TextBlob
 import mysql.connector
 import json
@@ -46,45 +47,8 @@ def writefile():
                                  items["movie_id"]))
 
 
-def delfile(file_name):
-    os.remove("res.json")
-    os.remove("res.txt")
-
-
-def sqlentry(movie_name):
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Login@123",
-        database="Master_Final"
-    )
-    mycursor = mydb.cursor()
-    # creating a table in db
-    sql_query = "CREATE TABLE Master_Final." + movie_name + \
-        " (id VARCHAR(50), movie_name VARCHAR(75), text VARCHAR(500), created_at VARCHAR(75), place_id VARCHAR(75), country VARCHAR(75), city VARCHAR(100), PRIMARY KEY(id));"
-    mycursor.execute(sql_query)
-    with open(movie_name + ".json", "r") as rf:
-        json_data = json.loads(rf.read())
-        insert_query = "INSERT INTO Master_Final." + movie_name + \
-            " (movie_name, text, id, created_at, place_id, country, city) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-        insert_vals = []
-        if sql_entries == 1:
-            for items in json_data["data"]:
-                for item in items.values():
-                    insert_vals.append(item)
-            print(insert_query)
-            print(insert_vals)
-            mycursor.execute(insert_query, tuple(insert_vals))
-        else:
-            for items in json_data["data"]:
-                for item in items.values():
-                    dum_vals = []
-                    dum_vals.append(item)
-                    insert_vals.append(tuple(dum_vals))
-            mycursor.executemany(insert_query, insert_vals)
-        mydb.commit()
-    # delfile(movie_name)
-
+def print_helper(msg):
+    print("{}, Current Time: {}".format(msg, datetime.now().strftime("%H:%M:%S")))
 
 def connect_to_endpoint(bearer_token, next_token=None):
     global is_movie_empty, movie_names_list
@@ -107,17 +71,23 @@ def connect_to_endpoint(bearer_token, next_token=None):
     if (next_token is not None):
         params['next_token'] = next_token
     try:
-        response = requests.request("GET", url, params=params, headers=headers)
-        if response.status_code != 200:
-            print(response.text, response.status_code)
-            print("waiting for 15 mins")
+        print_helper("Sending request")
+        response = requests.request("GET", url, params=params, headers=headers, timeout=30)
+        print_helper("Received response")
+        if response.status_code == 400:
             print("\n")
+            print("Error: {},{}".format(response.text, response.status_code))
+        elif response.status_code != 200:
+            print("\n")
+            print(response.text, response.status_code)
+            print_helper("waiting for 15 mins")
             time.sleep(960)
-            response = requests.request("GET", url, params=params, headers=headers)
+            print_helper("Sending request2")
+            response = requests.request("GET", url, params=params, headers=headers, timeout=30)
+            print_helper("Received response2")
             if response.status_code != 200:
-                print("\n")
+                print_helper("Second Exception \n")
                 raise Exception(response.status_code, response.text)
-
         if response.json()["meta"]["result_count"] == 0:
             is_movie_empty = True
             result = None
@@ -125,13 +95,14 @@ def connect_to_endpoint(bearer_token, next_token=None):
             is_movie_empty = False
             result = data_restructure(response.json())
     except Exception as err:
-        print("connect_to endpoint: {}".format(repr(err)))
-
+        print("\n")
+        print("Error: connect_to endpoint: {}".format(repr(err)))
+        print("\n")
     return result
-    # return data_restructure(response.json())
 
 
 def data_restructure(response):
+    data_dic = {}
     data_arr = []
     global next_token, total_results, need_comma, sql_entries
     res_data = response["data"]
@@ -154,7 +125,8 @@ def data_restructure(response):
                     temp_data["city"] = geo_id["full_name"]
             data_arr.append(temp_data)
         except Exception as err:
-            print(repr(err))
+            print("\n")
+            print_helper("Error: data_restructure: {}".format(repr(err)))
             print("\n")
     total_results += int(response["meta"]["result_count"])
     if "next_token" in response["meta"]:
@@ -165,9 +137,14 @@ def data_restructure(response):
         need_comma = False
         if total_results == 1:
             sql_entries = 1
-        # print(total_results)
-    return data_arr
+    data_dic["data"] = data_arr
+    return data_dic
 
+def files(file_name, token, data):
+    if not os.path.isdir("files/{}".format(file_name)):
+        os.mkdir("files/{}".format(file_name))
+    with open("files/{}/{}.json".format(file_name, token), "w") as wf:
+        wf.write(json.dumps(data))
 
 with open("tweetsv1.json", "r+") as rf:
     data = json.loads(rf.read())
@@ -176,158 +153,19 @@ with open("tweetsv1.json", "r+") as rf:
         movie_id = items["movie_id"]
         key = items["movie_name"]
         val = items["list_of_mv_names"]
-        # key = "Blood Curse: The Haunting of Alicia Stone"
-        # val = "BloodCurse:TheHauntingofAliciaStone OR BloodCurse:TheHauntingofAliciaStonemovie OR BloodCurse:HauntingofAliciaStone OR BloodCurse:HauntingofAliciaStonemovie OR BloodCurse OR BloodCursemovie OR TheHauntingofAliciaStone OR TheHauntingofAliciaStonemovie OR HauntingofAliciaStone OR HauntingofAliciaStonemovie"
         next_token = "token"
-        # if key == "Daddy's Girl":
-        #     break
-        print(key)
+        print("\n")
+        print_helper(key)
         movie_names_list = val
         movie_name = key
         while next_token is not None:
             if next_token == "token":
                 next_token = None
-            # print("next_token: ", next_token)
             time.sleep(1)
             res = connect_to_endpoint(bearer_token, next_token)
             if res is None:
                 break
-            # print(res)
-            with open("senti.txt", 'a') as af:
-                for i in res:
-                    af.write(i["text"] + ",")
-            with open("res.txt", 'a') as tf:
-                # json.dumps => converts json to string
-                # json.loads => converts string to json
-                temp_data = json.dumps(res)
-                str_data = ""
-                if comma_for_next_file == 1:
-                    str_data += ","
-                str_data += temp_data[1:-1]
-                # if need_comma:
-                #     str_data += ","
-                # tf.write(str_data)
-                str_data += ","
-                tf.write(str_data[0:-1])
-                comma_for_next_file = 1
-        if not is_movie_empty:
-            with open("senti.csv", "a") as wf:
-                writer = csv.writer(wf)
-                with open("senti.txt", "r+") as rf:
-                    senti_data = rf.read()
-                    senti = TextBlob(senti_data).sentiment
-                    writer.writerow(
-                        (movie_id, senti.polarity, senti.subjectivity))
-                    rf.truncate(0)
-        # break
-if not is_movie_empty:
-    with open("res.txt", "r") as rf:
-        txt_data = '{"data":['
-        txt_data += rf.read()
-        txt_data += "]}"
-        with open("res.json", "w") as wf:
-            data = json.loads(txt_data)
-            data["result_count"] = total_results
-            wf.write(json.dumps(data))
-
-        # if (next_token is None) and (res != "empty"):
-        #     txt_data = '{"data":['
-        #     with open("res.txt", "r") as tf:
-        #         txt_data += tf.read()
-        #     txt_data += "]}"
-        #     with open("res.json", "w") as jf:
-        #         data = json.loads(txt_data)
-        #         # print(data)
-        #         data["result_count"] = total_results
-        #         jf.write(json.dumps(data))
-        # # writefile()
-        # break
-
-        # if key == "Synapse":
-        #     break
-        # movie_names_list = val
-        # movie_name = key
-        # while next_token is not None:
-        #     if next_token == "token":
-        #         next_token = None
-        #     # print(key)
-        #     # print(val)
-        #     # print("next_token: ", next_token)
-        #     time.sleep(1)
-        #     res = connect_to_endpoint(bearer_token, next_token)
-        #     if res == "empty":
-        #         # print("empty")
-        #         # print("\n")
-        #         break
-        #     # print("\n")
-        #     with open(movie_name + ".txt", 'a') as tf:
-        #         # json.dumps => converts json to string
-        #         # json.loads => converts string to json
-        #         temp_data = json.dumps(res)
-        #         str_data = temp_data[1:-1]
-        #         if need_comma:
-        #             str_data += ","
-        #         tf.write(str_data)
-        # if (next_token is None) and (res != "empty"):
-        #     txt_data = '{"data":['
-        #     with open(movie_name + ".txt", "r") as tf:
-        #         txt_data += tf.read()
-        #     txt_data += "]}"
-        #     with open(movie_name + ".json", "w") as jf:
-        #         data = json.loads(txt_data)
-        #         data["result_count"] = total_results
-        #         jf.write(json.dumps(data))
-        #     sqlentry(movie_name)
-
-    # movie_names_list = data["Cruella"]
-    # movie_name = "Cruella"
-    # while next_token is not None:
-    #     if next_token == "token":
-    #         next_token = None
-    #     print("next_token: ", next_token)
-    #     time.sleep(1)
-    #     res = connect_to_endpoint(bearer_token, next_token)
-    #     with open(movie_name + ".txt", 'a') as tf:
-    #         # json.dumps => converts json to string
-    #         # json.loads => converts string to json
-    #         temp_data = json.dumps(res)
-    #         str_data = temp_data[1:-1]
-    #         if need_comma:
-    #             str_data += ","
-    #         tf.write(str_data)
-    # if next_token is None:
-    #     txt_data = '{"data":['
-    #     with open(movie_name + ".txt", "r") as tf:
-    #         txt_data += tf.read()
-    #     txt_data += "]}"
-    #     with open(movie_name + ".json", "a") as jf:
-    #         data = json.loads(txt_data)
-    #         data["result_count"] = total_results
-    #         jf.write(json.dumps(data))
-
-
-# while next_token is not None:
-#     if next_token == "token":
-#         next_token = None
-#     print("next_token: ", next_token)
-#     time.sleep(1)
-#     res = connect_to_endpoint(bearer_token, next_token)
-#     with open("resp1.txt", 'a') as tf:
-#         # json.dumps => converts json to string
-#         # json.loads => converts string to json
-#         temp_data = json.dumps(res)
-#         str_data = temp_data[1:-1]
-#         if need_comma:
-#             str_data += ","
-#         tf.write(str_data)
-
-# if next_token is None:
-#     txt_data = '{"data":['
-#     with open("resp1.txt", "r") as tf:
-#         txt_data += tf.read()
-#     txt_data += "]}"
-
-#     with open("resp1.json", "a") as jf:
-#         data = json.loads(txt_data)
-#         data["result_count"] = total_results
-#         jf.write(json.dumps(data))
+            if next_token is None:
+                files(movie_id, 1, res)
+            else:
+                files(movie_id, next_token, res)
