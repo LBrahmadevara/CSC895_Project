@@ -1,0 +1,27 @@
+svg .state:hover {
+    stroke: rgb(199, 192, 192);
+    stroke-width: 0.4rem;
+    cursor: pointer;
+  }
+
+  .tooltip{
+    font-size: x-large;
+  }
+  
+  .geo-main{
+    padding-left: 600px;
+  }
+
+  .geo-title{
+    font-size: 40px;
+    padding-top: 80px;
+  }
+
+  .img-legend{
+    border: 0px !important
+  }
+  
+  #root {
+    height: 100vh;
+    margin-right: 40rem;
+  }
