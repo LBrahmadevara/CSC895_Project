@@ -5,12 +5,10 @@ import { select, geoPath, scaleLinear, geoAlbersUsa } from "d3";
 import data from "./gz_2010_us_040_00_500k.json";
 import "./GeoChart.css";
 import * as d3 from "d3";
-// import {legend} from "d3-color-legend"
 import legend from "./legend.png";
 
 const GeoChart = () => {
   const svgRef = useRef();
-  const wrapperRef = useRef();
   const [selectedState, setSelectedState] = useState(null);
   let salesData = {
     Alabama: 28559,
@@ -244,64 +242,45 @@ const GeoChart = () => {
       .fitSize([1600, 800], selectedState || data)
       .precision(100);
     const pathGenerator = geoPath().projection(projection);
+
+    const hoverText = d3
+      .select("body")
+      .append("div")
+      .attr("class", "hoverText");
     svg
       .selectAll(".state")
       .data(data.features)
       .join("path")
       .attr("class", "state")
-      .on("mouseenter", (event, value) => {
-        svg
-          .selectAll(".tooltip")
-          .data([value])
-          .join((enter) => enter.append("text"))
-          .attr("class", "tooltip")
-          .transition()
-          .style("opacity", 2);
-      })
+
       .on("mousemove", (event, value) => {
-        console.log(value);
-        svg
-          .select(".tooltip")
+        console.log(value)
+        let state_name = value["properties"]["NAME"]
+        console.log(state_name)
+        hoverText
+          .style("left", event.pageX + 20 + "px")
+          .style("top", event.pageY - 60 + "px")
+          .style("display", "inline-block")
           .html(
-            (d) => `<tspan x=${event.offsetX + 50}px y=${
-              event.offsetY - 1
-            }px>State: ${d["properties"]["NAME"]} </tspan>
-          <tspan x=${event.offsetX + 50}px y=${
-              event.offsetY + 31
-            // }px>Number of Tweets: ${salesData[d["properties"]["NAME"]]}</tspan>
-            // <tspan x=${event.offsetX + 50}px y=${
-            //   event.offsetY + 61
-          }px>Number of Tweets: ${tweet_senti[d["properties"]["NAME"]][0]+tweet_senti[d["properties"]["NAME"]][1]+tweet_senti[d["properties"]["NAME"]][2]}</tspan>
-          <tspan x=${event.offsetX + 50}px y=${
-            event.offsetY + 61
-            }px>Number of Movies: ${
-              movies_count[d["properties"]["NAME"]]
-            } </tspan><tspan x=${event.offsetX + 50}px y=${
-              event.offsetY + 91
-            }px>Number of +ve Tweets: ${
-              tweet_senti[d["properties"]["NAME"]][0]
-            } </tspan><tspan x=${event.offsetX + 50}px y=${
-              event.offsetY + 121
-            }px>Number of Neutral Tweets: ${
-              tweet_senti[d["properties"]["NAME"]][1]
-            } </tspan><tspan x=${event.offsetX + 50}px y=${
-              event.offsetY + 151
-            }px>Number of -ve Tweets: ${
-              tweet_senti[d["properties"]["NAME"]][2]
-            } </tspan><tspan x=${event.offsetX + 50}px y=${
-              event.offsetY + 181
-            }px>Average Tweet Sentiment: ${
-              avg_senti[d["properties"]["NAME"]]
-            } </tspan>`
-          )
-          .attr("x", event.offsetX + 50 + "px")
-          .attr("y", event.offsetY - 1 + "px");
+            `State: ${state_name} <br>
+            Number of Tweets: ${tweet_senti[state_name][0] +
+            tweet_senti[state_name][1] +
+            tweet_senti[state_name][2]} <br>
+            Number of Movies: ${ movies_count[state_name]} <br>
+            Number of +ve Tweets: ${tweet_senti[state_name][0]} <br>
+            Number of Neutral Tweets: ${tweet_senti[state_name][1]} <br>
+            Number of -ve Tweets: ${tweet_senti[state_name][2]} <br>
+            Average Tweet Sentiment: ${avg_senti[state_name]}`
+          );
       })
-      .on("mouseleave", () => svg.selectAll(".tooltip").remove())
+      .on("mouseout", (d) => {
+        hoverText.style("display", "none");
+      })
       .transition()
       .duration(1000)
       .attr("fill", (feature) =>
-        colorScale(salesData[feature["properties"]["NAME"]]))
+        colorScale(salesData[feature["properties"]["NAME"]])
+      )
       .attr("d", (feature) => pathGenerator(feature));
 
     // svg
