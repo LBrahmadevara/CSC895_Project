@@ -99,15 +99,21 @@ const MoviesAPI = () => {
           if ((val["genre_ids"].length !== 0) && (val["original_language"] === "en")) {
             let dum_dic = {};
             let gen_ids = "";
+            // movie_name => this gives the name of the movie
             dum_dic["movie_name"] = val["title"];
+            // genre_ids => gives the list of id's
             val["genre_ids"].map((val1, ind1) => {
               gen_ids += genres[val1] + ", ";
             });
+            // map the list of ids to names and retrieving genre names
             dum_dic["genre"] = gen_ids.slice(0, -2);
-            dum_dic["year"] = 2021;
+            // add specific movie_type to distingush between feature and over-the-top media service
             dum_dic["movie_type"] = "Featured Film";
+            // movie_id => this is just for the future reference, this is a unique id for a movie in the API
             dum_dic["movie_id"] = val["id"];
+            // release_date => shows the exact date when the movie was released
             dum_dic["release_date"] = val["release_date"];
+            dum_dic["year"] = 2021;
             dum_arr.push(dum_dic);
           }
         });

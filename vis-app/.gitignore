@@ -8,6 +8,12 @@
 
 # testing
 /coverage
+*.csv
+*.json
+*.pptx
+*.docx
+*.pdf
+*.txt
 
 # production
 /build

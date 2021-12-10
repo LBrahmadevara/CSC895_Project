@@ -25,6 +25,13 @@ def specific_movie_sentiment():
         with open("senti/{}/movieSentiment.txt".format(movie_id), "r") as rf:
             print("movie_id: {}".format(movie_id))
             txt_data = rf.read()
+            # sentiment = TextBlob(txt_data).sentiment
+            # polarity = sentiment[0]
+            # subjectivity = sentiment[1]
+            # with open("senti/overallmovieSenti.csv", "a") as af:
+            #     writer = csv.writer(af)
+            #     writer.writerow((movie_id, polarity, subjectivity))
+            
             sentiment = sentiment_analysis(txt_data)
             with open("senti/overallmovieSenti.csv", "a") as af:
                 writer = csv.writer(af)

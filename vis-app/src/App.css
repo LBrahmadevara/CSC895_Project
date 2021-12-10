@@ -1,38 +1,35 @@
-.App {
-  text-align: center;
+.filter-checkbox{
+  background-color: #dcdfdf;
+  border-radius: 1.2rem;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.chord-chart{
+  margin-top: -5rem;
+  /* margin-right: 20rem; */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.dropdown-label{
+  margin-left: 0.8rem;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.App{
+  height: 100vh;
 }
 
-.App-link {
-  color: #61dafb;
+.main-title-vis{
+  padding-left: 600px;
+  padding-top: 50px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.tabs-div{
+  padding-top: 20px;
+  padding-left: 600px;
+}
+
+.css-1a4cg4j-MuiButtonBase-root-MuiTab-root{
+  font-size: 30px !important;
+}
+
+.main-chord-chart{
+  padding-left: 600px;
 }

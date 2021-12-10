@@ -5,7 +5,7 @@ import { select, geoPath, scaleLinear, geoAlbersUsa } from "d3";
 import data from "./gz_2010_us_040_00_500k.json";
 import "./GeoChart.css";
 import * as d3 from "d3";
-import legend from "./legend.png";
+import legend1 from "./legend1.png";
 
 const GeoChart = () => {
   const svgRef = useRef();
@@ -254,19 +254,21 @@ const GeoChart = () => {
       .attr("class", "state")
 
       .on("mousemove", (event, value) => {
-        console.log(value)
-        let state_name = value["properties"]["NAME"]
-        console.log(state_name)
+        console.log(value);
+        let state_name = value["properties"]["NAME"];
+        console.log(state_name);
         hoverText
           .style("left", event.pageX + 20 + "px")
           .style("top", event.pageY - 60 + "px")
           .style("display", "inline-block")
           .html(
             `State: ${state_name} <br>
-            Number of Tweets: ${tweet_senti[state_name][0] +
-            tweet_senti[state_name][1] +
-            tweet_senti[state_name][2]} <br>
-            Number of Movies: ${ movies_count[state_name]} <br>
+            Number of Tweets: ${
+              tweet_senti[state_name][0] +
+              tweet_senti[state_name][1] +
+              tweet_senti[state_name][2]
+            } <br>
+            Number of Movies: ${movies_count[state_name]} <br>
             Number of +ve Tweets: ${tweet_senti[state_name][0]} <br>
             Number of Neutral Tweets: ${tweet_senti[state_name][1]} <br>
             Number of -ve Tweets: ${tweet_senti[state_name][2]} <br>
@@ -299,20 +301,15 @@ const GeoChart = () => {
       </div>
       <div className="d-flex justify-content-end pt-4 ">
         <img
-          src={legend}
+          src={legend1}
           target="legend"
           className="img-thumbnail img-legend"
         />
       </div>
-      {/* <svg
-        ref={svgRef}
-        style={{ width: 1000, height: 500, overflow: "visible" }}
-      ></svg> */}
       <svg
         ref={svgRef}
         style={{ width: width, height: height, overflow: "visible" }}
       ></svg>
-      {/* </div> */}
     </div>
   );
 };
