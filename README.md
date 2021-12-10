@@ -2,9 +2,9 @@
 
 # Instructions to run the project:
 After installing the below libraries in both frontend and backend.\
-In frontend:\
+**In frontend:**\
 npm start\
-In backend:\
+**In backend:**\
 flask run
 
 
