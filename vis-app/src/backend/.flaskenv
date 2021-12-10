@@ -1,2 +1,2 @@
-FLASK_APP=Database.py
+FLASK_APP=ChordChartValues.py
 FLASK_ENV=development

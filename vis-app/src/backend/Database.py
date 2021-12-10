@@ -1,11 +1,3 @@
-# from typing import Text
-# import requests
-# import json
-# from textblob import TextBlob
-
-# sentence = TextBlob("I have mixed feelings about the Orange Ball of Hate right now, but it sure was pretty last night.")
-# print(sentence.sentiment)
-
 import time
 from flask import Flask, request
 import mysql.connector
@@ -84,19 +76,27 @@ def insertsql():
         csvreader = csv.reader(rf)
         header = next(csvreader)
         for row in csvreader:
-            insert_query = "Insert into Master_Final.allMoviesv1 (api_id, movie_name, genre, year, movie_type,\
-                sentiment, release_date) values (%s, %s, %s, %s, %s, %s, %s)"
+            insert_query = "Insert into Master_Final.allMoviesv1 (api_id, movie_name, \
+            genre, year, movie_type,sentiment, release_date) values (%s, %s, %s, %s, %s, %s, %s)"
             mycursor.execute(insert_query, tuple(row))
             mydb.commit()
 
 def createcsvfile():
+    # mydb = mysql.connector.connect(
+    #     host="localhost",
+    #     user="root",
+    #     password="Login@123",
+    #     database="Master_Final"
+    # )
+    # mycursor = mydb.cursor()
     select_query = "SELECT * FROM Master_Final.allMoviesv1;"
     mycursor.execute(select_query)
     myresult = mycursor.fetchall()
     # print(myresult)
     with open("allMoviesv1.csv", "w", encoding="UTF8") as wf:
         writer = csv.writer(wf)
-        writer.writerow(("movie_id", "api_id", "movie_name", "genre", "year", "movie_type", "sentiment", "release_date"))
+        writer.writerow(("movie_id", "api_id", "movie_name", "genre", "year", 
+        "movie_type", "sentiment", "release_date"))
         for i in myresult:
             writer.writerow(i)
 

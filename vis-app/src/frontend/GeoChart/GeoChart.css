@@ -4,8 +4,18 @@ svg .state:hover {
     cursor: pointer;
   }
 
-  .tooltip{
+  .hoverText {
+    position: absolute;
+    display: none;
+    min-width: 80px;
+    height: auto;
+    background: none repeat scroll 0 0 #f9f3f3;
+    border: 2px solid #d6b9a0f2;
+    padding: 14px;
+    text-align: start;
     font-size: x-large;
+    border-radius: 15px;
+    padding: 10px;
   }
   
   .geo-main{
