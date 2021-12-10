@@ -1,10 +1,10 @@
 # CSC895_Project
 
 # Instructions to run the project:
-After installing the below libraries in both frontend and backend.
-In frontend:
-npm start
-In backend:
+After installing the below libraries in both frontend and backend.\
+In frontend:\
+npm start\
+In backend:\
 flask run
 
 
