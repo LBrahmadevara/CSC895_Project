@@ -1,0 +1,32 @@
+.drop-down{
+    margin-right: 1000px !important;
+    /* margin-right: 500px !important; */
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+}
+
+.chord-title{
+    font-size: 35px;
+    margin-top: 70px;
+}
+
+.loading-text{
+    padding-top: 600px;
+}
+
+.main-chord-chart-values{
+    /* background-color: bisque; */
+    border-radius: 30px ;
+}
+
+.css-9npbnl-MuiFormLabel-root-MuiInputLabel-root{
+    font-size: x-large !important;
+}
+
+.css-11u53oe-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-11u53oe-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-11u53oe-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input{
+    font-size: x-large;
+}
+
+.css-kk1bwy-MuiButtonBase-root-MuiMenuItem-root{
+    font-size: x-large !important;
+}
